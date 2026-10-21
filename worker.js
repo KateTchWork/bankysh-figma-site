@@ -1,27 +1,45 @@
 /**
- * POST /api/subscribe   —  Cloudflare Pages Function
+ * Bankysh site Worker.
  *
- * Receives an email address from the signup form and notifies someone.
+ * Serves the static site from ./public and handles one endpoint:
+ *
+ *   POST /api/subscribe   — someone submitted the signup form
  *
  * Two independent notification paths, both optional:
- *   1. console.log  — always on, visible in Cloudflare's real-time logs.
- *                     Costs nothing and needs no configuration.
+ *   1. console.log  — always on, visible in the dashboard under
+ *                     the Worker → Observability → Logs. Costs nothing,
+ *                     needs no configuration.
  *   2. email        — only if RESEND_API_KEY and NOTIFY_TO are set as
- *                     environment variables on the Pages project.
+ *                     secrets/variables on the Worker.
  *
  * It ALWAYS returns 200 on a valid address, even if the email send fails.
- * The visitor must never see an error from a notification they did not ask for.
+ * The visitor must never see an error from a notification they did not ask
+ * for.
  *
- * 🔴 This stores nothing. It is a notifier, not a mailing list. If you later
- *    want a list, that needs a privacy policy first — telling people what you
- *    keep and why is not optional once you are keeping it.
+ * 🔴 This stores nothing. It is a notifier, not a mailing list. A list needs
+ *    a privacy policy first — and the form is currently hidden on the site
+ *    for exactly that reason (see SHOW_SIGNUP_FORM in public/index.html).
  */
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-export async function onRequestPost(context) {
-  const { request, env } = context;
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
 
+    if (url.pathname === '/api/subscribe') {
+      if (request.method !== 'POST') {
+        return json({ ok: false, error: 'POST only' }, 405);
+      }
+      return handleSubscribe(request, env);
+    }
+
+    // everything else is a static file
+    return env.ASSETS.fetch(request);
+  }
+};
+
+async function handleSubscribe(request, env) {
   let email = '';
   let page = '';
   try {
@@ -29,7 +47,7 @@ export async function onRequestPost(context) {
     email = String(body.email || '').trim();
     page = String(body.page || '').slice(0, 120);
   } catch (err) {
-    // malformed body — fall through to the validity check
+    // malformed body — falls through to the validity check
   }
 
   if (!EMAIL_RE.test(email) || email.length > 254) {
@@ -39,8 +57,7 @@ export async function onRequestPost(context) {
   const when = new Date().toISOString();
   const country = request.headers.get('cf-ipcountry') || '-';
 
-  // Path 1 — always. Cloudflare dashboard → the Pages project → Functions →
-  // Real-time Logs. Look for lines beginning SIGNUP.
+  // Path 1 — always on.
   console.log(`SIGNUP ${email} | ${when} | ${country} | ${page}`);
 
   // Path 2 — only when configured.
@@ -73,14 +90,6 @@ export async function onRequestPost(context) {
   }
 
   return json({ ok: true });
-}
-
-// Anything that is not a POST gets a plain answer rather than a crash.
-export async function onRequest(context) {
-  if (context.request.method === 'POST') {
-    return onRequestPost(context);
-  }
-  return json({ ok: false, error: 'POST only' }, 405);
 }
 
 function json(obj, status = 200) {

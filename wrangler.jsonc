@@ -1,0 +1,26 @@
+{
+  // Cloudflare Worker with static assets.
+  //
+  // "name" MUST match the existing Worker in the dashboard, or a deploy
+  // creates a second project and the custom domain stays on the old one.
+  "name": "bankysh",
+
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+
+  "assets": {
+    // everything the browser downloads lives here
+    "directory": "./public",
+
+    // lets worker.js fall through to the static files
+    "binding": "ASSETS",
+
+    // one-page site: unknown paths render index.html rather than a 404
+    "not_found_handling": "single-page-application",
+
+    // 🔴 the Worker must see /api/* before the asset server answers it,
+    //    otherwise POST /api/subscribe returns index.html and the signup
+    //    notifier silently does nothing
+    "run_worker_first": ["/api/*"]
+  }
+}

@@ -1,0 +1,4 @@
+# the mirrored bundle must stay byte-identical — no line-ending translation
+*.js -text
+*.css -text
+*.html -text

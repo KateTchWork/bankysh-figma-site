@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bankysh — everything your money needs</title>
+    <meta name="description" content="Bankysh is a digital wallet with a card, crypto and investments in one app.">
+    <meta property="og:title" content="Bankysh — everything your money needs">
+    <meta property="og:description" content="A digital wallet, a card, crypto and investments in one app.">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#04091A">
+    <script type="module" crossorigin src="./assets/index-Uo5GRahE.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DpYB2PQo.css">
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!--
+      Signup notifier.
+
+      The React bundle's own handler is  e => { e.preventDefault(), o(!0) } —
+      it shows "Check your inbox to finish setup" and throws the address away.
+
+      Rather than patch a 460 KB minified bundle, this listens on the document
+      in the CAPTURE phase, so it runs BEFORE React's handler. It reads the
+      email, posts it to the Pages Function, and gets out of the way. React
+      still renders its success message exactly as before.
+
+      Nothing here can break the page: every path is wrapped and a failed
+      request is swallowed.
+
+      🔴 Needs Cloudflare Pages (Functions). On GitHub Pages /api/subscribe is
+         a 404 and the form goes back to silently discarding the address.
+    -->
+    <script>
+    (function () {
+      var RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      document.addEventListener('submit', function (e) {
+        try {
+          var form = e.target;
+          if (!form || form.tagName !== 'FORM') return;
+          var input = form.querySelector('input[type="email"]');
+          if (!input) return;
+          var email = (input.value || '').trim();
+          if (!RE.test(email)) return;
+          fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, page: location.pathname }),
+            keepalive: true
+          }).catch(function () {});
+        } catch (err) { /* never let this affect the page */ }
+      }, true);
+    })();
+    </script>
+  </body>
+</html>

@@ -15,8 +15,102 @@
   <body>
     <div id="root"></div>
 
+    <!-- ═══════════════════════════════════════════════════════════════
+         THE ONE SWITCH
+
+         SHOW_SIGNUP_FORM = false   the email form is hidden and replaced
+                                    by a "email us" banner. Use this while
+                                    there is no privacy policy.
+
+         SHOW_SIGNUP_FORM = true    the original form comes back exactly as
+                                    Figma built it, and the notifier below
+                                    starts emailing you each signup again.
+
+         Flip the one word on the next line. Nothing else to change.
+         ═══════════════════════════════════════════════════════════════ -->
+    <script>var SHOW_SIGNUP_FORM = false;</script>
+
+    <style>
+      .bk-contact-banner{
+        max-width:28rem;margin:0 auto;padding:1.5rem 1.5rem 1.75rem;
+        border:1px solid rgba(255,255,255,.14);border-radius:1.25rem;
+        background:rgba(255,255,255,.04);text-align:center;
+      }
+      .bk-contact-banner p{
+        margin:0 0 1.1rem;color:rgba(255,255,255,.55);
+        font-size:.95rem;line-height:1.55;
+      }
+      .bk-contact-banner a.bk-cta{
+        display:inline-flex;align-items:center;justify-content:center;
+        height:3.25rem;padding:0 1.75rem;border-radius:999px;
+        background:#3D6BFF;color:#fff;text-decoration:none;
+        font-weight:600;font-size:.95rem;
+        transition:background .15s ease;
+      }
+      .bk-contact-banner a.bk-cta:hover{background:#5580FF}
+      .bk-contact-banner .bk-tel{
+        display:block;margin-top:.9rem;
+        color:rgba(255,255,255,.4);font-size:.85rem;text-decoration:none;
+      }
+      .bk-contact-banner .bk-tel:hover{color:rgba(255,255,255,.7)}
+    </style>
+
+    <script>
+    /* Hides every form that contains an email input and drops a contact
+       banner in its place. Runs again whenever React re-renders, because
+       React owns the DOM here and will happily put the form back.
+
+       Nothing is deleted — the form is display:none, so flipping the switch
+       above restores it untouched. */
+    (function () {
+      if (window.SHOW_SIGNUP_FORM) return;
+
+      var MAIL = 'hi@bankysh.com';
+      var TEL  = '+995 599 52 52 82';
+
+      function makeBanner() {
+        var d = document.createElement('div');
+        d.className = 'bk-contact-banner';
+        d.setAttribute('data-bk-banner', '1');
+        d.innerHTML =
+          '<p>We are not open for sign-ups yet. Email us and we will let you ' +
+          'know the moment the wallet is available.</p>' +
+          '<a class="bk-cta" href="mailto:' + MAIL + '">' + MAIL + '</a>' +
+          '<a class="bk-tel" href="tel:' + TEL.replace(/\s/g, '') + '">' + TEL + '</a>';
+        return d;
+      }
+
+      function apply() {
+        try {
+          var forms = document.querySelectorAll('form');
+          for (var i = 0; i < forms.length; i++) {
+            var f = forms[i];
+            if (!f.querySelector('input[type="email"]')) continue;
+            if (f.style.display === 'none') continue;
+            f.style.display = 'none';
+            if (!f.nextElementSibling ||
+                !f.nextElementSibling.hasAttribute('data-bk-banner')) {
+              f.parentNode.insertBefore(makeBanner(), f.nextSibling);
+            }
+          }
+        } catch (err) { /* never let this affect the page */ }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', apply);
+      } else {
+        apply();
+      }
+      new MutationObserver(apply).observe(document.documentElement, {
+        childList: true, subtree: true
+      });
+    })();
+    </script>
+
     <!--
-      Signup notifier.
+      Signup notifier — dormant while SHOW_SIGNUP_FORM is false, because
+      there is no form left to submit. It needs no change when you switch
+      the form back on.
 
       The React bundle's own handler is  e => { e.preventDefault(), o(!0) } —
       it shows "Check your inbox to finish setup" and throws the address away.

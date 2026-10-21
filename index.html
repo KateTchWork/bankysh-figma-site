@@ -48,11 +48,6 @@
         transition:background .15s ease;
       }
       .bk-contact-banner a.bk-cta:hover{background:#5580FF}
-      .bk-contact-banner .bk-tel{
-        display:block;margin-top:.9rem;
-        color:rgba(255,255,255,.4);font-size:.85rem;text-decoration:none;
-      }
-      .bk-contact-banner .bk-tel:hover{color:rgba(255,255,255,.7)}
     </style>
 
     <script>
@@ -66,17 +61,15 @@
       if (window.SHOW_SIGNUP_FORM) return;
 
       var MAIL = 'hi@bankysh.com';
-      var TEL  = '+995 599 52 52 82';
 
       function makeBanner() {
         var d = document.createElement('div');
         d.className = 'bk-contact-banner';
         d.setAttribute('data-bk-banner', '1');
         d.innerHTML =
-          '<p>We are not open for sign-ups yet. Email us and we will let you ' +
-          'know the moment the wallet is available.</p>' +
-          '<a class="bk-cta" href="mailto:' + MAIL + '">' + MAIL + '</a>' +
-          '<a class="bk-tel" href="tel:' + TEL.replace(/\s/g, '') + '">' + TEL + '</a>';
+          '<p>Email us and we will let you know the moment the wallet is ' +
+          'available.</p>' +
+          '<a class="bk-cta" href="mailto:' + MAIL + '">' + MAIL + '</a>';
         return d;
       }
 
